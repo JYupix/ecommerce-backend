@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import type { Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 
 interface AuthUser {
   userId: string;
   email: string;
+  role: Role;
 }
 
 declare module "express-serve-static-core" {
@@ -62,6 +64,7 @@ export const authMiddleware = async (
       select: {
         id: true,
         email: true,
+        role: true,
         is_active: true,
         tokenVersion: true,
       },
@@ -80,6 +83,7 @@ export const authMiddleware = async (
     req.user = {
       userId: user.id,
       email: user.email,
+      role: user.role,
     };
 
     next();

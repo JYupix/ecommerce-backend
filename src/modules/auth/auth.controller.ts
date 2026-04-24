@@ -171,3 +171,10 @@ export const logoutController = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const adminCheckController = async (req: Request, res: Response) => {
+  return res.status(200).json({
+    message: "Admin access granted",
+    user: req.user,
+  });
+};
