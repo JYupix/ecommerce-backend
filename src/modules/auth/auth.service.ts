@@ -29,13 +29,54 @@ interface RefreshTokenPayload {
 export const registerUser = async (
   data: RegisterInput,
 ): Promise<AuthResponse> => {
-  const { name, email, password } = data;
+  const name = data.name.trim();
+  const email = data.email.trim().toLowerCase();
+  const password = data.password;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (existingUser) throw new Error("Email already in use");
+  if (existingUser) {
+    if (existingUser.email_verified) {
+      throw new Error("Email already in use");
+    }
+
+    await prisma.emailToken.deleteMany({
+      where: {
+        userId: existingUser.id,
+        type: "VERIFY_EMAIL",
+      },
+    });
+
+    const token = generateToken();
+
+    await prisma.emailToken.create({
+      data: {
+        userId: existingUser.id,
+        type: "VERIFY_EMAIL",
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    try {
+      await sendVerificationEmail(email, token);
+    } catch {
+      await prisma.emailToken.deleteMany({
+        where: {
+          userId: existingUser.id,
+          type: "VERIFY_EMAIL",
+        },
+      });
+
+      return {
+        message: "Account exists but verification email could not be sent. Try again",
+      };
+    }
+
+    return { message: "Verification email resent" };
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -67,26 +108,28 @@ export const registerUser = async (
 
   try {
     await sendVerificationEmail(email, token);
-  } catch (error) {
-    await prisma.emailToken.delete({
-      where: { token },
-    });
-    throw new Error("Failed to send verification email");
+  } catch {
+    return {
+      message:
+        "User registered, but verification email could not be sent. Try again",
+    };
   }
 
   return { message: "User registered successfully" };
 };
 
 export const verifyEmail = async (token: string): Promise<AuthResponse> => {
+  const normalizedToken = token.trim();
+
   const emailToken = await prisma.emailToken.findUnique({
-    where: { token },
+    where: { token: normalizedToken },
   });
 
   if (!emailToken) throw new Error("Invalid or expired verification token");
 
   if (emailToken.expiresAt < new Date()) {
     await prisma.emailToken.delete({
-      where: { token },
+      where: { token: normalizedToken },
     });
     throw new Error("Verification token has expired");
   }
@@ -103,7 +146,7 @@ export const verifyEmail = async (token: string): Promise<AuthResponse> => {
 
   if (user.email_verified) {
     await prisma.emailToken.delete({
-      where: { token },
+      where: { token: normalizedToken },
     });
     return { message: "Email already verified" };
   }
@@ -117,14 +160,15 @@ export const verifyEmail = async (token: string): Promise<AuthResponse> => {
   });
 
   await prisma.emailToken.delete({
-    where: { token },
+    where: { token: normalizedToken },
   });
 
   return { message: "Email verified successfully" };
 };
 
 export const loginUser = async (data: LoginInput): Promise<AuthTokens> => {
-  const { email, password } = data;
+  const email = data.email.trim().toLowerCase();
+  const password = data.password;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -153,9 +197,11 @@ export const loginUser = async (data: LoginInput): Promise<AuthTokens> => {
 export const refreshToken = async (
   token: string,
 ): Promise<{ accessToken: string }> => {
+  const normalizedToken = token.trim();
+
   try {
     const decoded = jwt.verify(
-      token,
+      normalizedToken,
       env.JWT_REFRESH_SECRET as string,
     ) as RefreshTokenPayload;
 
@@ -182,7 +228,7 @@ export const refreshToken = async (
 export const forgotPassword = async (
   data: ForgotPasswordInput,
 ): Promise<AuthResponse> => {
-  const { email } = data;
+  const email = data.email.trim().toLowerCase();
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -225,7 +271,8 @@ export const forgotPassword = async (
 export const resetPassword = async (
   data: ResetPasswordInput,
 ): Promise<AuthResponse> => {
-  const { token, password: newPassword } = data;
+  const token = data.token.trim();
+  const newPassword = data.password;
 
   const emailToken = await prisma.emailToken.findUnique({
     where: { token },
@@ -283,10 +330,12 @@ export const changePassword = async (
   userId: string,
   data: ChangePasswordInput,
 ): Promise<AuthResponse> => {
-  const { currentPassword, newPassword } = data;
+  const normalizedUserId = userId.trim();
+  const currentPassword = data.currentPassword;
+  const newPassword = data.newPassword;
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: normalizedUserId },
   });
 
   if (!user) throw new Error("User not found");
@@ -327,8 +376,10 @@ export const changePassword = async (
 };
 
 export const logoutUser = async (userId: string): Promise<AuthResponse> => {
+  const normalizedUserId = userId.trim();
+
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: normalizedUserId },
   });
 
   if (!user) throw new Error("User not found");

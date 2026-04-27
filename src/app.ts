@@ -2,8 +2,11 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import type { Request, Response, NextFunction } from "express";
+import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./modules/auth/auth.routes.js";
+import categoriesRoutes from "./modules/categories/categories.routes.js";
+import { swaggerSpec } from "./docs/swagger.js";
 
 const app = express();
 
@@ -26,6 +29,9 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ ok: true, service: "ecommerce_api" });
 });
 
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use("/auth", authRoutes);
+app.use("/categories", categoriesRoutes);
 
 export default app;
