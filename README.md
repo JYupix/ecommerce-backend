@@ -6,15 +6,18 @@ It includes production-style authentication flows (JWT + refresh, email verifica
 
 ## ✨ Highlights
 
-- 🔐 JWT authentication (access + refresh tokens)
-- 🚪 Real logout with token invalidation (`tokenVersion`)
+- 🔐 JWT authentication (access + refresh tokens with `tokenVersion` revocation)
+- 🚪 Real logout with token invalidation
 - 📧 Email verification flow
-- 🔑 Forgot / reset password flow
+- 🔑 Forgot / reset password flow with token expiry
 - 🔄 Secure change-password flow
-- 🛡️ Route protection middleware
-- ⏱️ Basic auth rate limiting
-- 🧱 Prisma + PostgreSQL
+- 👤 Role-based access control (USER / ADMIN)
+- 🏷️ Categories CRUD with soft delete pattern
+- 📚 Swagger/OpenAPI documentation at `/docs`
+- 🧪 Manual test checklists included
+- 🛡️ Route protection & rate limiting
 - ✅ Input validation with Zod
+- 🧱 Prisma + PostgreSQL with migrations
 
 ## 🧰 Tech Stack
 
@@ -30,9 +33,12 @@ It includes production-style authentication flows (JWT + refresh, email verifica
 
 ## 📁 Project Structure
 
-- `src/modules/auth` → auth routes, controller, service, schemas, types
-- `src/middleware` → auth middleware + rate limit middleware
-- `src/config` → environment + DB + external providers
+- `src/modules/auth` → authentication (register, login, logout, password recovery)
+- `src/modules/categories` → categories CRUD with soft delete & restore
+- `src/middleware` → auth validation, role-based access, rate limiting
+- `src/config` → environment variables, database, external services
+- `src/docs` → Swagger/OpenAPI documentation
+- `docs/manual-tests` → manual testing checklists
 - `prisma` → schema + migrations
 
 ## 🚀 Quick Start
@@ -44,27 +50,72 @@ It includes production-style authentication flows (JWT + refresh, email verifica
 
 ## 🔒 Auth Endpoints
 
-- `POST /auth/register`
-- `GET /auth/verify-email`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
-- `POST /auth/change-password`
+- `POST /auth/register` → Create account
+- `GET /auth/verify-email` → Verify email with token
+- `POST /auth/login` → Login with email/password
+- `POST /auth/refresh` → Refresh access token
+- `POST /auth/logout` → Logout & revoke tokens
+- `POST /auth/forgot-password` → Request password reset
+- `POST /auth/reset-password` → Reset password with token
+- `POST /auth/change-password` → Change password (authenticated)
+
+## 🏷️ Categories Endpoints
+
+- `GET /categories` → List all active categories (public)
+- `GET /categories/slug/:slug` → Get category by slug (public)
+- `POST /categories` → Create category (admin only)
+- `PATCH /categories/:id` → Update category (admin only)
+- `DELETE /categories/:id` → Soft delete category (admin only)
+- `PATCH /categories/:id/restore` → Restore deleted category (admin only)
+
+## 📚 API Documentation
+
+Visit `/docs` after starting the server to access Swagger/OpenAPI interactive documentation with all endpoints, request/response schemas, and HTTP status codes.
 
 ## 🧪 Scripts
 
-- `npm run dev`
-- `npm run build`
-- `npm run start`
-- `npm run typecheck`
-- `npm run prisma:migrate`
-- `npm run prisma:generate`
+- `npm run dev` → Start development server with hot reload
+- `npm run build` → Build TypeScript to JavaScript
+- `npm run start` → Start production server
+- `npm run typecheck` → Run TypeScript compiler check
+- `npm run prisma:migrate` → Run database migrations
+- `npm run prisma:generate` → Generate Prisma client
 
-## 🎯 Goal
+## 📋 Testing
 
-Build a strong backend base for an eCommerce system with secure auth, clean architecture, and room to scale into products, carts, orders, and payments.
+Manual test checklists are available in `docs/manual-tests/` for:
+- Auth flows (register, login, logout, password recovery)
+- Categories CRUD operations
+
+Each endpoint is documented with expected HTTP status codes and response formats.
+
+## 🎯 Roadmap
+
+**Completed** ✅
+- Authentication system (register, login, logout, password recovery)
+- Token revocation via `tokenVersion`
+- Role-based access control (USER/ADMIN)
+- Categories module with soft delete/restore
+- Swagger/OpenAPI documentation
+
+**In Progress** 🚧
+- Products module
+- Product variants & images
+- Shopping cart
+
+**Planned** 📅
+- Orders & checkout
+- Payment integration
+- Inventory management
+- Advanced filtering & search
+
+## 💡 Architecture Highlights
+
+- **Soft Delete Pattern**: Categories, Products, and Variants support soft delete for data integrity
+- **Token Revocation**: `tokenVersion` field enables instant token invalidation on logout or password changes
+- **Role-Based Access**: Middleware enforces permissions (ADMIN-only endpoints for write operations)
+- **Swagger Integration**: Centralized API documentation with automatic request/response schema validation
+- **Type Safety**: Full TypeScript with Prisma generated types
 
 ## 👨‍💻 Author
 
