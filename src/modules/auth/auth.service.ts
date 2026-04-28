@@ -27,137 +27,87 @@ interface RefreshTokenPayload {
   tokenVersion: number;
 }
 
-export const registerUser = async (
-  data: RegisterInput,
-): Promise<RegisterResponse> => {
-  const name = data.name.trim();
-  const email = data.email.trim().toLowerCase();
-  const password = data.password;
-
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (existingUser) {
-    if (existingUser.email_verified) {
-      throw new Error("Email already in use");
-    }
-
-    await prisma.emailToken.deleteMany({
-      where: {
-        userId: existingUser.id,
-        type: "VERIFY_EMAIL",
-      },
-    });
-
-    const token = generateToken();
-
-    await prisma.emailToken.create({
-      data: {
-        userId: existingUser.id,
-        type: "VERIFY_EMAIL",
-        token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
-
-    try {
-      await sendVerificationEmail(email, token);
-    } catch {
-      if (env.NODE_ENV === "production") {
-        await prisma.emailToken.deleteMany({
-          where: {
-            userId: existingUser.id,
-            type: "VERIFY_EMAIL",
-          },
-        });
-      }
-
-      if (env.NODE_ENV !== "production") {
-        return {
-          message:
-            "Account exists but verification email could not be sent. Try again",
-          verificationToken: token,
-        };
-      }
-
-      return {
-        message: "Account exists but verification email could not be sent. Try again",
-      };
-    }
-
-    if (env.NODE_ENV !== "production") {
-      return {
-        message: "Verification email resent",
-        verificationToken: token,
-      };
-    }
-
-    return { message: "Verification email resent" };
+const withToken = (response: AuthResponse, token: string): RegisterResponse => {
+  if (env.NODE_ENV !== "production") {
+    return { ...response, verificationToken: token };
   }
+  return response;
+};
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
-
+const refreshVerificationToken = async (userId: string): Promise<string> => {
   await prisma.emailToken.deleteMany({
-    where: {
-      userId: user.id,
-      type: "VERIFY_EMAIL",
-    },
+    where: { userId, type: "VERIFY_EMAIL" },
   });
 
   const token = generateToken();
 
   await prisma.emailToken.create({
     data: {
-      userId: user.id,
+      userId,
       type: "VERIFY_EMAIL",
       token,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     },
   });
 
+  return token;
+};
+
+export const registerUser = async (
+  data: RegisterInput,
+): Promise<RegisterResponse> => {
+  const name = data.name.trim();
+  const email = data.email.trim().toLowerCase();
+
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+
+  if (existingUser) {
+    if (existingUser.email_verified) {
+      throw new Error("Email already in use");
+    }
+
+    const token = await refreshVerificationToken(existingUser.id);
+
+    try {
+      await sendVerificationEmail(email, token);
+    } catch {
+      if (env.NODE_ENV === "production") {
+        await prisma.emailToken.deleteMany({
+          where: { userId: existingUser.id, type: "VERIFY_EMAIL" },
+        });
+      }
+      return withToken(
+        { message: "Account exists but verification email could not be sent. Try again" },
+        token,
+      );
+    }
+
+    return withToken({ message: "Verification email resent" }, token);
+  }
+
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  const user = await prisma.user.create({
+    data: { name, email, password: hashedPassword },
+  });
+
+  const token = await refreshVerificationToken(user.id);
+
   try {
     await sendVerificationEmail(email, token);
   } catch {
     if (env.NODE_ENV === "production") {
       await prisma.emailToken.deleteMany({
-        where: {
-          userId: user.id,
-          type: "VERIFY_EMAIL",
-        },
+        where: { userId: user.id, type: "VERIFY_EMAIL" },
       });
     }
-
-    if (env.NODE_ENV !== "production") {
-      return {
-        message:
-          "User registered, but verification email could not be sent. Try again",
-        verificationToken: token,
-      };
-    }
-
-    return {
-      message:
-        "User registered, but verification email could not be sent. Try again",
-    };
+    return withToken(
+      { message: "User registered, but verification email could not be sent. Try again" },
+      token,
+    );
   }
 
-  if (env.NODE_ENV !== "production") {
-    return {
-      message: "User registered successfully",
-      verificationToken: token,
-    };
-  }
-
-  return { message: "User registered successfully" };
+  return withToken({ message: "User registered successfully" }, token);
 };
 
 export const verifyEmail = async (token: string): Promise<AuthResponse> => {
