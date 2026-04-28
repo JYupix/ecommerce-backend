@@ -29,6 +29,10 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ ok: true, service: "ecommerce_api" });
 });
 
+app.get("/", (_req, res) => {
+  res.redirect("/docs");
+});
+
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/auth", authRoutes);

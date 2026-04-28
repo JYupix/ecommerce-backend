@@ -1,4 +1,5 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import { env } from "../config/env.js";
 
 export const swaggerSpec = swaggerJsdoc({
   definition: {
@@ -10,8 +11,8 @@ export const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       {
-        url: "http://localhost:3000",
-        description: "Local development server",
+        url: env.APP_URL,
+        description: "Current API server",
       },
     ],
     components: {
