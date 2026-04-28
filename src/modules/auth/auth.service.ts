@@ -64,15 +64,32 @@ export const registerUser = async (
     try {
       await sendVerificationEmail(email, token);
     } catch {
-      await prisma.emailToken.deleteMany({
-        where: {
-          userId: existingUser.id,
-          type: "VERIFY_EMAIL",
-        },
-      });
+      if (env.NODE_ENV === "production") {
+        await prisma.emailToken.deleteMany({
+          where: {
+            userId: existingUser.id,
+            type: "VERIFY_EMAIL",
+          },
+        });
+      }
+
+      if (env.NODE_ENV !== "production") {
+        return {
+          message:
+            "Account exists but verification email could not be sent. Try again",
+          verificationToken: token,
+        };
+      }
 
       return {
         message: "Account exists but verification email could not be sent. Try again",
+      };
+    }
+
+    if (env.NODE_ENV !== "production") {
+      return {
+        message: "Verification email resent",
+        verificationToken: token,
       };
     }
 
@@ -110,6 +127,23 @@ export const registerUser = async (
   try {
     await sendVerificationEmail(email, token);
   } catch {
+    if (env.NODE_ENV === "production") {
+      await prisma.emailToken.deleteMany({
+        where: {
+          userId: user.id,
+          type: "VERIFY_EMAIL",
+        },
+      });
+    }
+
+    if (env.NODE_ENV !== "production") {
+      return {
+        message:
+          "User registered, but verification email could not be sent. Try again",
+        verificationToken: token,
+      };
+    }
+
     return {
       message:
         "User registered, but verification email could not be sent. Try again",

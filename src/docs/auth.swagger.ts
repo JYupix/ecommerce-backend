@@ -5,7 +5,7 @@
  *     tags:
  *       - Auth
  *     summary: Register a new user
- *     description: Creates a new account. In development, the response also includes the verification token so the flow can be tested without email access.
+ *     description: Creates a new account. In development, the response also includes the verification token so the flow can be tested without email access, even if the verification email cannot be sent.
  *     requestBody:
  *       required: true
  *       content:
@@ -28,6 +28,11 @@
  *                 summary: Development response with verification token
  *                 value:
  *                   message: User registered successfully
+ *                   verificationToken: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+ *               developmentEmailFailure:
+ *                 summary: Development response when email sending fails
+ *                 value:
+ *                   message: User registered, but verification email could not be sent. Try again
  *                   verificationToken: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
  *       400:
  *         description: Invalid request data
