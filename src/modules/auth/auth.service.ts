@@ -6,6 +6,7 @@ import { env } from "../../config/env.js";
 import {
   RegisterInput,
   AuthResponse,
+  RegisterResponse,
   LoginInput,
   AuthTokens,
   ForgotPasswordInput,
@@ -28,7 +29,7 @@ interface RefreshTokenPayload {
 
 export const registerUser = async (
   data: RegisterInput,
-): Promise<AuthResponse> => {
+): Promise<RegisterResponse> => {
   const name = data.name.trim();
   const email = data.email.trim().toLowerCase();
   const password = data.password;
@@ -112,6 +113,13 @@ export const registerUser = async (
     return {
       message:
         "User registered, but verification email could not be sent. Try again",
+    };
+  }
+
+  if (env.NODE_ENV !== "production") {
+    return {
+      message: "User registered successfully",
+      verificationToken: token,
     };
   }
 

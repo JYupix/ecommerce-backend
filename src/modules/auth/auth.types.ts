@@ -9,6 +9,10 @@ export interface AuthResponse {
   message: string;
 }
 
+export interface RegisterResponse extends AuthResponse {
+  verificationToken?: string;
+}
+
 export interface LoginInput {
   email: string;
   password: string;

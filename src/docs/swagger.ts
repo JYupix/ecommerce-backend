@@ -42,6 +42,22 @@ export const swaggerSpec = swaggerJsdoc({
           },
           required: ["message"],
         },
+        RegisterResponse: {
+          allOf: [
+            {
+              $ref: "#/components/schemas/MessageResponse",
+            },
+            {
+              type: "object",
+              properties: {
+                verificationToken: {
+                  type: "string",
+                  description: "Returned only in development to test email verification without inbox access.",
+                },
+              },
+            },
+          ],
+        },
         AuthTokens: {
           type: "object",
           properties: {
