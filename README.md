@@ -1,122 +1,177 @@
-# 🛒 ECommerce API
+# ECommerce API
 
-A clean and practical backend API for an eCommerce platform, built with TypeScript, Express, Prisma, and PostgreSQL.
+Backend API for an eCommerce platform built with TypeScript, Express, Prisma, and PostgreSQL.
 
-It includes production-style authentication flows (JWT + refresh, email verification, password recovery, token revocation on logout/password change) and secure API foundations.
+It includes JWT authentication, email verification, password recovery, role-based access, Swagger documentation, and a Render-ready deployment setup.
 
-## ✨ Highlights
+## Live Demo
 
-- 🔐 JWT authentication (access + refresh tokens with `tokenVersion` revocation)
-- 🚪 Real logout with token invalidation
-- 📧 Email verification flow
-- 🔑 Forgot / reset password flow with token expiry
-- 🔄 Secure change-password flow
-- 👤 Role-based access control (USER / ADMIN)
-- 🏷️ Categories CRUD with soft delete pattern
-- 📚 Swagger/OpenAPI documentation at `/docs`
-- 🧪 Manual test checklists included
-- 🛡️ Route protection & rate limiting
-- ✅ Input validation with Zod
-- 🧱 Prisma + PostgreSQL with migrations
+Try the API documentation here:
 
-## 🧰 Tech Stack
+- https://ecommerce-backend-o0qg.onrender.com/docs/
 
-- TypeScript
-- Express
-- Prisma ORM
-- PostgreSQL
-- JWT (`jsonwebtoken`)
-- Zod
-- Resend (email sending)
-- Helmet
-- Morgan
+## Highlights
 
-## 📁 Project Structure
+- JWT authentication with access and refresh tokens
+- Real session revocation with `tokenVersion`
+- Email verification flow
+- Password recovery and password change flows
+- Role-based access control (`USER` / `ADMIN`)
+- Categories CRUD with soft delete
+- Interactive Swagger/OpenAPI documentation at `/docs`
+- Request validation with Zod
+- Prisma + PostgreSQL with migrations
+- GitHub Actions CI
 
-- `src/modules/auth` → authentication (register, login, logout, password recovery)
-- `src/modules/categories` → categories CRUD with soft delete & restore
-- `src/middleware` → auth validation, role-based access, rate limiting
-- `src/config` → environment variables, database, external services
-- `src/docs` → Swagger/OpenAPI documentation
-- `docs/manual-tests` → manual testing checklists
-- `prisma` → schema + migrations
+## Tech Stack
 
-## 🚀 Quick Start
+- 🟦 TypeScript
+- ⚡ Express
+- 🧩 Prisma ORM
+- 🗄️ PostgreSQL
+- 🔐 JSON Web Token
+- ✅ Zod
+- ✉️ Resend
+- 🛡️ Helmet
+- 📝 Morgan
+- 🧪 Vitest
+- 🌐 Swagger / OpenAPI
+
+## Project Structure
+
+- `src/modules/auth` - registration, login, verification, refresh, logout, and password reset
+- `src/modules/categories` - categories CRUD with soft delete
+- `src/middleware` - authentication, roles, and rate limiting
+- `src/config` - environment, database, and external services
+- `src/docs` - Swagger documentation
+- `prisma` - schema and migrations
+- `docs/manual-tests` - manual testing checklists
+
+## Swagger
+
+Interactive API documentation is available at:
+
+- `/docs`
+
+From Swagger you can:
+
+- Test endpoints without Postman
+- See request and response examples
+- Run the `register` and `verify-email` flow
+- Copy the verification token in development when email is unavailable
+
+## Auth Flow
+
+- `POST /auth/register` - create a new user
+- `GET /auth/verify-email` - verify email using a token
+- `POST /auth/login` - return access and refresh tokens
+- `POST /auth/refresh` - renew the access token
+- `POST /auth/logout` - revoke the session
+- `POST /auth/forgot-password` - start the password recovery flow
+- `POST /auth/reset-password` - reset the password using a token
+- `POST /auth/change-password` - change the password while authenticated
+
+In development, `POST /auth/register` may return `verificationToken` in the response so you can test the flow in Swagger or Render without relying on email delivery.
+
+## Categories
+
+- `GET /categories` - list active categories
+- `GET /categories/slug/:slug` - find a category by slug
+- `POST /categories` - create a category, admin only
+- `PATCH /categories/:id` - update a category, admin only
+- `DELETE /categories/:id` - soft delete a category, admin only
+- `PATCH /categories/:id/restore` - restore a deleted category, admin only
+
+## Environment Variables
+
+Example configuration:
+
+```dotenv
+DATABASE_URL=postgresql://user:password@host:5432/database?schema=public
+RESEND_API_KEY=your_resend_api_key
+APP_URL=https://your-api.onrender.com
+RESEND_FROM_EMAIL=onboarding@resend.dev
+JWT_SECRET=your_long_secret
+JWT_REFRESH_SECRET=your_long_refresh_secret
+PORT=3000
+NODE_ENV=production
+```
+
+## Quick Start
 
 1. Install dependencies
 2. Configure `.env`
-3. Run database migrations
-4. Start development server
+3. Generate Prisma Client
+4. Run migrations
+5. Start the server
 
-## 🔒 Auth Endpoints
+```bash
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+```
 
-- `POST /auth/register` → Create account
-- `GET /auth/verify-email` → Verify email with token
-- `POST /auth/login` → Login with email/password
-- `POST /auth/refresh` → Refresh access token
-- `POST /auth/logout` → Logout & revoke tokens
-- `POST /auth/forgot-password` → Request password reset
-- `POST /auth/reset-password` → Reset password with token
-- `POST /auth/change-password` → Change password (authenticated)
+## Scripts
 
-## 🏷️ Categories Endpoints
+- `npm run dev` - start the development server with hot reload
+- `npm run build` - generate Prisma Client and compile TypeScript
+- `npm start` - start the production server
+- `npm run typecheck` - run the TypeScript compiler check
+- `npm run test` - run the test suite
+- `npm run prisma:generate` - generate Prisma Client
+- `npm run prisma:migrate` - create/apply migrations in development
+- `npm run prisma:studio` - open Prisma Studio
 
-- `GET /categories` → List all active categories (public)
-- `GET /categories/slug/:slug` → Get category by slug (public)
-- `POST /categories` → Create category (admin only)
-- `PATCH /categories/:id` → Update category (admin only)
-- `DELETE /categories/:id` → Soft delete category (admin only)
-- `PATCH /categories/:id/restore` → Restore deleted category (admin only)
+## Testing
 
-## 📚 API Documentation
+The project includes unit tests for the auth controller using Vitest.
 
-Visit `/docs` after starting the server to access Swagger/OpenAPI interactive documentation with all endpoints, request/response schemas, and HTTP status codes.
+You can also validate the main flows manually in Swagger:
 
-## 🧪 Scripts
+- Registration
+- Email verification
+- Login
+- Refresh token
+- Password reset
 
-- `npm run dev` → Start development server with hot reload
-- `npm run build` → Build TypeScript to JavaScript
-- `npm run start` → Start production server
-- `npm run typecheck` → Run TypeScript compiler check
-- `npm run prisma:migrate` → Run database migrations
-- `npm run prisma:generate` → Generate Prisma client
+## Deployment on Render
 
-## 📋 Testing
+The project is ready for Render deployment.
 
-Manual test checklists are available in `docs/manual-tests/` for:
-- Auth flows (register, login, logout, password recovery)
-- Categories CRUD operations
+- Connect the GitHub repository
+- Create a Web Service
+- Configure the environment variables
+- Add a PostgreSQL database
+- Run migrations with `npx prisma migrate deploy`
 
-Each endpoint is documented with expected HTTP status codes and response formats.
+Swagger is available at `/docs`, and the root URL redirects there.
 
-## 🎯 Roadmap
+## Roadmap
 
-**Completed** ✅
-- Authentication system (register, login, logout, password recovery)
-- Token revocation via `tokenVersion`
-- Role-based access control (USER/ADMIN)
-- Categories module with soft delete/restore
+### Completed
+
+- Full JWT auth with refresh tokens
+- Email verification
+- Password recovery
+- Role-based route protection
+- Categories module
 - Swagger/OpenAPI documentation
+- GitHub Actions CI
 
-**In Progress** 🚧
+### In Progress
+
 - Products module
-- Product variants & images
+- Product variants and images
 - Shopping cart
 
-**Planned** 📅
-- Orders & checkout
+### Planned
+
+- Orders and checkout
 - Payment integration
 - Inventory management
-- Advanced filtering & search
+- Search and filtering
 
-## 💡 Architecture Highlights
+## Author
 
-- **Soft Delete Pattern**: Categories, Products, and Variants support soft delete for data integrity
-- **Token Revocation**: `tokenVersion` field enables instant token invalidation on logout or password changes
-- **Role-Based Access**: Middleware enforces permissions (ADMIN-only endpoints for write operations)
-- **Swagger Integration**: Centralized API documentation with automatic request/response schema validation
-- **Type Safety**: Full TypeScript with Prisma generated types
-
-## 👨‍💻 Author
-
-Built by a backend developer focused on solid junior-to-mid engineering practices.
+Backend API built with a focus on clarity, maintainability, and learning-friendly documentation.
