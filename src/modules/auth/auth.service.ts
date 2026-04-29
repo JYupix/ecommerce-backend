@@ -191,30 +191,32 @@ export const refreshToken = async (
 ): Promise<{ accessToken: string }> => {
   const normalizedToken = token.trim();
 
+  let decoded: RefreshTokenPayload;
+  
   try {
-    const decoded = jwt.verify(
+    decoded = jwt.verify(
       normalizedToken,
       env.JWT_REFRESH_SECRET as string,
     ) as RefreshTokenPayload;
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
-
-    if (!user || !user.is_active) {
-      throw new Error("Unauthorized");
-    }
-
-    if (decoded.tokenVersion !== user.tokenVersion) {
-      throw new Error("Refresh token revoked");
-    }
-
-    const newAccessToken = generateAccessToken(user.id, user.tokenVersion);
-
-    return { accessToken: newAccessToken };
   } catch {
     throw new Error("Invalid or expired refresh token");
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  });
+
+  if (!user || !user.is_active) {
+    throw new Error("Unauthorized");
+  }
+
+  if (decoded.tokenVersion !== user.tokenVersion) {
+    throw new Error("Refresh token revoked");
+  }
+
+  const newAccessToken = generateAccessToken(user.id, user.tokenVersion);
+
+  return { accessToken: newAccessToken };
 };
 
 export const forgotPassword = async (
