@@ -128,7 +128,7 @@ npm run dev
 
 Comprehensive test coverage with **72 passing tests** using Vitest:
 
-### Service Layer Tests (59 tests)
+### Service Layer Tests (37 tests)
 - **Login & Refresh:** 5 + 5 = 10 tests
   - Valid credentials, invalid passwords, non-existent users, expired tokens
 - **Registration & Email Verification:** 5 + 6 = 11 tests
