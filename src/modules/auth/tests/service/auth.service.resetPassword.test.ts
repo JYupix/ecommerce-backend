@@ -196,6 +196,8 @@ describe("resetPassword", () => {
   });
 
   it("should not fail if sending email fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     mocks.prisma.emailToken.findUnique.mockResolvedValue({
       id: "user-1",
       token: "valid-token",
@@ -216,14 +218,17 @@ describe("resetPassword", () => {
 
     expect(mocks.prisma.$transaction).toHaveBeenCalled();
     expect(mocks.prisma.user.update).toHaveBeenCalledWith({
-        where: { id: "user-1" },
-        data: {
-            password: "hashed-new-password",
-            tokenVersion: { increment: 1 },
-        },
+      where: { id: "user-1" },
+      data: {
+        password: "hashed-new-password",
+        tokenVersion: { increment: 1 },
+      },
     });
     expect(mocks.sendPasswordChangedEmail).toHaveBeenCalledWith(
-        "user-1@example.com",
+      "user-1@example.com",
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to send password changed email",
     );
     expect(result).toEqual({ message: "Password reset successfully" });
   });
