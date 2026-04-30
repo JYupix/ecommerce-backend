@@ -12,6 +12,7 @@ Try the API documentation here:
 
 ## Highlights
 
+- ✅ **72 comprehensive unit tests** with Vitest (service + controller layer)
 - JWT authentication with access and refresh tokens
 - Real session revocation with `tokenVersion`
 - Email verification flow
@@ -125,15 +126,36 @@ npm run dev
 
 ## Testing
 
-The project includes unit tests for the auth controller using Vitest.
+Comprehensive test coverage with **72 passing tests** using Vitest:
 
-You can also validate the main flows manually in Swagger:
+### Service Layer Tests (59 tests)
+- **Login & Refresh:** 5 + 5 = 10 tests
+  - Valid credentials, invalid passwords, non-existent users, expired tokens
+- **Registration & Email Verification:** 5 + 6 = 11 tests
+  - Email validation, duplicate accounts, token expiration
+- **Password Recovery:** 3 + 6 = 9 tests
+  - Forgot password flow, reset with invalid/expired tokens, email failures
+- **Password Change:** 5 tests
+  - Current password validation, new password constraints, email confirmation
+- **Logout:** 2 tests
+  - Token version invalidation, user not found
 
-- Registration
-- Email verification
-- Login
-- Refresh token
-- Password reset
+### Controller Tests (35 tests)
+- Full HTTP request/response validation
+- Error handling and status codes
+- Middleware integration (auth, role-based access)
+- Request validation with Zod
+
+**Run tests:**
+```bash
+npm run test
+```
+
+**Manual flow validation in Swagger:**
+- Registration & Email verification
+- Login & Refresh token
+- Password reset & change
+- Logout session revocation
 
 ## Deployment on Render
 
