@@ -242,11 +242,73 @@ describe("loginController", () => {
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("returns 401 when credentials are invalid", async () => {});
+  it("returns 401 when credentials are invalid", async () => {
+    const req = {
+      body: {
+        email: "test@mail.com",
+        password: "Password123!",
+      },
+    } as unknown as Request;
+    const res = createMockResponse();
 
-  it("returns 429 when login attempts exceed limit", async () => {});
+    loginUserMock.mockRejectedValue(new Error("Invalid credentials"));
 
-  it("returns 500 for unexpected errors", async () => {});
+    await loginController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Invalid credentials" });
+  });
+
+  it("returns 401 when email is not verified", async () => {
+    const req = {
+      body: {
+        email: "test@mail.com",
+        password: "Password123!",
+      },
+    } as unknown as Request;
+    const res = createMockResponse();
+
+    loginUserMock.mockRejectedValue(new Error("Please verify your email"));
+
+    await loginController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Please verify your email" });
+  });
+
+  it("returns 401 when the account is disabled", async () => {
+    const req = {
+      body: {
+        email: "test@mail.com",
+        password: "Password123!",
+      },
+    } as unknown as Request;
+    const res = createMockResponse();
+
+    loginUserMock.mockRejectedValue(new Error("Account disabled"));
+
+    await loginController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Account disabled" });
+  });
+
+  it("returns 500 for unexpected errors", async () => {
+    const req = {
+      body: {
+        email: "test@mail.com",
+        password: "Password123!",
+      },
+    } as unknown as Request;
+    const res = createMockResponse();
+
+    loginUserMock.mockRejectedValue("Unexpected error");
+
+    await loginController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: "Internal server error" });
+  });
 });
 
 describe("refreshController", () => {
@@ -538,6 +600,23 @@ describe("changePasswordController", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalled();
+  });
+
+  it("returns 401 when the request is not authenticated", async () => {
+    const req = {
+      body: {
+        currentPassword: "CurrentPassword123!",
+        newPassword: "NewPassword123!",
+        confirmPassword: "NewPassword123!",
+      },
+    } as unknown as Request;
+    const res = createMockResponse();
+
+    await changePasswordController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "Unauthorized" });
+    expect(changePasswordMock).not.toHaveBeenCalled();
   });
 
   it("returns 401 when current password is incorrect", async () => {

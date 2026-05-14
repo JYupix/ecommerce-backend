@@ -182,6 +182,8 @@ describe("changePassword", () => {
   });
 
   it("should not fail if sending confirmation email fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     mocks.prisma.user.findUnique.mockResolvedValue({
       id: "user-1",
       email: "test@example.com",
@@ -225,6 +227,11 @@ describe("changePassword", () => {
     expect(mocks.sendPasswordResetConfirmationEmail).toHaveBeenCalledWith(
       "test@example.com",
     );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to send password change confirmation email",
+    );
     expect(result).toEqual({ message: "Password changed successfully" });
+
+    consoleErrorSpy.mockRestore();
   });
 });

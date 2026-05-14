@@ -183,5 +183,36 @@ describe("registerUser", () => {
     });
     expect(mocks.prisma.emailToken.deleteMany).toHaveBeenCalledTimes(1);
   });
+
+  it("cleans up the verification token in production when email sending fails", async () => {
+    mocks.env.NODE_ENV = "production";
+    mocks.prisma.user.findUnique.mockResolvedValue(null);
+    mocks.bcryptHash.mockResolvedValue("hashed-password");
+    mocks.prisma.user.create.mockResolvedValue({ id: "user-1" });
+    mocks.generateToken.mockReturnValue("token-999");
+    mocks.prisma.emailToken.deleteMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.emailToken.create.mockResolvedValue({});
+    mocks.sendVerificationEmail.mockRejectedValue(new Error("mail error"));
+
+    const result = await registerUser(baseInput);
+
+    expect(mocks.prisma.emailToken.deleteMany).toHaveBeenNthCalledWith(1, {
+      where: {
+        userId: "user-1",
+        type: "VERIFY_EMAIL",
+      },
+    });
+    expect(mocks.prisma.emailToken.deleteMany).toHaveBeenNthCalledWith(2, {
+      where: {
+        userId: "user-1",
+        type: "VERIFY_EMAIL",
+      },
+    });
+    expect(result).toEqual({
+      message:
+        "User registered, but verification email could not be sent. Try again",
+    });
+    expect(result).not.toHaveProperty("verificationToken");
+  });
 });
 
