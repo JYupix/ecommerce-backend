@@ -12,17 +12,16 @@ Try the API documentation here:
 
 ## Highlights
 
-- ✅ **72 comprehensive unit tests** with Vitest (service + controller layer)
 - JWT authentication with access and refresh tokens
 - Real session revocation with `tokenVersion`
 - Email verification flow
 - Password recovery and password change flows
 - Role-based access control (`USER` / `ADMIN`)
 - Categories CRUD with soft delete
+- Comprehensive unit tests (service + controller layer)
 - Interactive Swagger/OpenAPI documentation at `/docs`
 - Request validation with Zod
 - Prisma + PostgreSQL with migrations
-- GitHub Actions CI
 
 ## Tech Stack
 
@@ -126,36 +125,18 @@ npm run dev
 
 ## Testing
 
-Comprehensive test coverage with **72 passing tests** using Vitest:
+Run the test suite with Vitest:
 
-### Service Layer Tests (37 tests)
-- **Login & Refresh:** 5 + 5 = 10 tests
-  - Valid credentials, invalid passwords, non-existent users, expired tokens
-- **Registration & Email Verification:** 5 + 6 = 11 tests
-  - Email validation, duplicate accounts, token expiration
-- **Password Recovery:** 3 + 6 = 9 tests
-  - Forgot password flow, reset with invalid/expired tokens, email failures
-- **Password Change:** 5 tests
-  - Current password validation, new password constraints, email confirmation
-- **Logout:** 2 tests
-  - Token version invalidation, user not found
-
-### Controller Tests (35 tests)
-- Full HTTP request/response validation
-- Error handling and status codes
-- Middleware integration (auth, role-based access)
-- Request validation with Zod
-
-**Run tests:**
 ```bash
 npm run test
 ```
 
-**Manual flow validation in Swagger:**
-- Registration & Email verification
-- Login & Refresh token
-- Password reset & change
-- Logout session revocation
+Tests cover:
+- **Auth service:** login, refresh, registration, email verification, password recovery, password change, logout
+- **Auth controller:** HTTP validation, error handling, middleware integration
+- **Auth middleware:** JWT verification, token revocation, role-based access
+- **Categories service:** create, read, list, update, soft-delete, restore, slug uniqueness
+- **Categories controller:** validation, error mapping, auth gating
 
 ## Deployment on Render
 
@@ -171,24 +152,8 @@ Swagger is available at `/docs`, and the root URL redirects there.
 
 ## Roadmap
 
-### Completed
-
-- Full JWT auth with refresh tokens
-- Email verification
-- Password recovery
-- Role-based route protection
-- Categories module
-- Swagger/OpenAPI documentation
-- GitHub Actions CI
-
-### In Progress
-
-- Products module
-- Product variants and images
+- Products module (variants and images)
 - Shopping cart
-
-### Planned
-
 - Orders and checkout
 - Payment integration
 - Inventory management
